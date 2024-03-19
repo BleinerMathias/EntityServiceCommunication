@@ -1,6 +1,8 @@
 package br.edu.ifsp.scl.sdm.entityservicecommunication
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -12,9 +14,16 @@ class MainActivity : AppCompatActivity() {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
+    private lateinit var incrementServiceIntent : Intent
+    private var counter = 0
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(amb.root)
+
+        incrementServiceIntent = Intent(this, IncrementService::class.java)
+
         with (amb) {
             mainTb.apply {
                 getString(R.string.app_name).also { setTitle(it) }
@@ -22,7 +31,25 @@ class MainActivity : AppCompatActivity() {
             }
             incrementBt.setOnClickListener {
 
+                // Serviço iniciado
+                startService(incrementServiceIntent.apply {
+                    putExtra("VALUE", counter)
+                })
             }
         }
+
+        // Ouvir os dados
+        InterEntityCommunication.valueLiveData.observe(this) {value ->
+            counter = value
+            Toast.makeText(this, "You clicked $counter times.", Toast.LENGTH_SHORT).show()
+        }
     }
+
+    // Método para destrutir o serviço
+    override fun onDestroy() {
+        super.onDestroy()
+        stopService(incrementServiceIntent)
+    }
+
+
 }
