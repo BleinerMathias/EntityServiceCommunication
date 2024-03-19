@@ -14,7 +14,9 @@ class IncrementService : Service() {
         override fun handleMessage(msg:Message) {
             super.handleMessage(msg)
             msg.data.getInt("VALUE").also{
-                InterEntityCommunication.valueLiveData.postValue(it+1)
+                Intent("INCREMENT_VALUE_ACTION").putExtra("VALUE", it+1).apply {
+                    sendBroadcast(this) // Envia para o sistema operacional
+                }
             }
             stopSelf() // Serviço auto se elimina
         }
