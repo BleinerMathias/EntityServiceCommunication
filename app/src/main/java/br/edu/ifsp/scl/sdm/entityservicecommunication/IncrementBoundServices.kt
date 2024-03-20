@@ -12,47 +12,20 @@ import android.util.Log
 
 class IncrementBoundServices : Service() {
 
-    private inner class IncrementBoundServiceHandler(looper: Looper): Handler(looper){
-        override fun handleMessage(msg: Message) {
-            super.handleMessage(msg)
-
-            msg.replyTo?.also {
-                clientMessenger = it
-            }
-
-            msg.data.getInt("VALUE").also{
-                Log.v(this.javaClass.simpleName, "Return increment value: $it")
-
-                clientMessenger.send(Message.obtain().apply {
-                    data.putInt("VALUE", it+1)
-                })
-
-            }
-            stopSelf() // Serviço auto se elimina
+    // Implementação
+    private val ibsBinder: IncrementBoundServiceInterface.Stub =
+        object : IncrementBoundServiceInterface.Stub() {
+            override fun increment(value: Int): Int = value + 1
         }
-    }
 
-    private lateinit var incrementBoundServiceMessenger: Messenger
-    private lateinit var incrementBoundServiceHandler: IncrementBoundServiceHandler
-    private lateinit var clientMessenger: Messenger
 
     override fun onBind(intent: Intent): IBinder {
         Log.v(this.javaClass.simpleName, "Entity bound to the service")
-       /* Obtemos essa interface através do nosso Messenger */
-        incrementBoundServiceMessenger = Messenger(incrementBoundServiceHandler)
-        return incrementBoundServiceMessenger.binder
+        return ibsBinder
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
         Log.v(this.javaClass.simpleName, "Entity unbound to the service")
         return super.onUnbind(intent)
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-        HandlerThread(this.javaClass.simpleName).apply {
-            start()
-            incrementBoundServiceHandler = IncrementBoundServiceHandler(looper)
-        }
     }
 }
